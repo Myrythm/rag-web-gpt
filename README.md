@@ -128,26 +128,13 @@ npm install
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+rename `.env.example` to `.env` and add required API key in the root directory:
 
 ```env
-# OpenAI Configuration
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Database
-SQLITE_DB_PATH=./rag_web.db
-
-# Security (Generate a secure random string)
-SECRET_KEY=your_secret_key_here
+OPENAI_API_KEY=sk-proj-.....
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=ls.....
 ```
-
-**Generate a secure SECRET_KEY:**
-
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-```
-
----
 
 ## 🎮 Usage
 
@@ -168,6 +155,7 @@ API Documentation: **http://localhost:8000/docs**
 
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 
@@ -210,60 +198,9 @@ rag-web-gpt/
 
 ---
 
-## 🎯 Features Roadmap
-
-- [x] Document upload and processing
-- [x] RAG-based Q&A
-- [x] User authentication
-- [x] Admin dashboard
-- [x] Search and filtering
-- [ ] Multi-file format support (DOCX, TXT, etc.)
-- [ ] Export chat history
-- [ ] Dark/Light theme toggle
-- [ ] API rate limiting
-- [ ] Docker deployment
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **OpenAI** for GPT models
-- **LangChain** for RAG framework
-- **ChromaDB** for vector storage
-- **FastAPI** and **Vue.js** communities
-
----
-
-## 📧 Contact
-
-**GitHub**: [@Myrythm](https://github.com/Myrythm)
-
-**Repository**: [rag-web-gpt](https://github.com/Myrythm/rag-web-gpt)
-
----
 
 <div align="center">
   
 **⭐ Star this repo if you find it helpful!**
-
-Made with ❤️ by [Myrythm](https://github.com/Myrythm)
 
 </div>
