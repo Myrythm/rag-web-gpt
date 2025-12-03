@@ -24,8 +24,7 @@
 - [Configuration](#-configuration)
 - [Usage](#-usage)
 - [Project Structure](#-project-structure)
-- [Contributing](#-contributing)
-- [License](#-license)
+  
 
 ---
 
