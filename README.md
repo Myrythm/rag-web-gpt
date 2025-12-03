@@ -2,10 +2,10 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-green.svg)
 ![Vue](https://img.shields.io/badge/Vue-3.4+-brightgreen.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 
 **A modern Retrieval-Augmented Generation (RAG) web application with document management and intelligent chat capabilities.**
 
@@ -35,10 +35,10 @@
 
 - **📄 Document Upload & Management** - Upload PDF documents and automatically chunk them for RAG
 - **💬 Intelligent Chat** - Ask questions and get answers based on your uploaded documents
-- **🔍 Vector Search** - Powered by ChromaDB for semantic similarity search
-- **📊 Admin Dashboard** - Manage users, documents, and system settings
+- **🔍 Vector Search** - Used ChromaDB for semantic similarity search
+- **📊 Admin Dashboard** - Manage users and documents
 - **🔐 Authentication & Authorization** - Secure login with role-based access control (Admin/User)
-- **📱 Responsive Design** - Beautiful, modern UI that works on all devices
+- **📱 Responsive Design** - Works well on all devices
 
 ### 🛠️ Advanced Features
 
@@ -57,7 +57,7 @@
 - **[LangChain](https://python.langchain.com/)** - LLM orchestration framework (v1.0)
 - **[ChromaDB](https://www.trychroma.com/)** - Vector database for embeddings
 - **[SQLite](https://www.sqlite.org/)** - Lightweight database for user & metadata storage
-- **[OpenAI API](https://openai.com/)** - GPT models for chat completion
+- **[OpenAI API](https://openai.com/)** - GPT models for chat completion and embedding
 
 ### Frontend
 
@@ -73,7 +73,7 @@
 
 Before you begin, ensure you have the following installed:
 
-- **Python 3.9+** - [Download](https://www.python.org/downloads/)
+- **Python 3.10+** - [Download](https://www.python.org/downloads/)
 - **Node.js 16+** - [Download](https://nodejs.org/)
 - **npm or yarn** - Comes with Node.js
 - **OpenAI API Key** - [Get one here](https://platform.openai.com/api-keys)
