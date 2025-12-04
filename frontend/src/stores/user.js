@@ -3,8 +3,26 @@ import api from '../utils/api'
 import { ref } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
-  const user = ref(null)
   const token = ref(localStorage.getItem('token') || '')
+  const user = ref(null)
+
+  // Restore user from token on initialization
+  function initializeUser() {
+    if (token.value) {
+      try {
+        const payload = JSON.parse(atob(token.value.split('.')[1]))
+        user.value = { username: payload.sub, role: payload.role }
+      } catch (error) {
+        console.error('Failed to decode token', error)
+        // Token invalid, clear everything
+        token.value = ''
+        localStorage.removeItem('token')
+      }
+    }
+  }
+
+  // Initialize on store creation
+  initializeUser()
 
   async function login(username, password) {
     const formData = new FormData()

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # Paths
     CHROMA_PERSIST_DIRECTORY: str = "./chroma"
     SQLITE_DB_PATH: str = "./rag_web.db"
+    LLM_CACHE_PATH: str = ".langchain.db"
 
     class Config:
         env_file = ".env"

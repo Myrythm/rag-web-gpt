@@ -1,9 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from backend.chains.rag_chain import get_rag_chain, get_rag_chain_streaming
+from backend.chains.rag_chain import get_rag_chain_streaming
 from backend.utils.security import require_user
 from typing import Optional
+import uuid
+import json
+import asyncio
+import logging
 from backend.services.sqlite_client import (
     create_chat_message, 
     get_chat_history, 
@@ -13,11 +17,9 @@ from backend.services.sqlite_client import (
     update_session_title,
     delete_session
 )
-import uuid
-import json
-import asyncio
-import logging
 
+# Note: Using vectorstore similarity score instead of LLM classifier for efficiency
+            
 # Setup logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -31,35 +33,7 @@ class ChatRequest(BaseModel):
     query: str
     session_id: Optional[str] = None
 
-@router.post("/chat")
-async def chat(request: ChatRequest, current_user: dict = Depends(require_user)):
-    user = await get_user_by_username(current_user["username"])
-    user_id = user["id"]
-    
-    session_id = request.session_id
-    
-    # Create session if not exists
-    if not session_id:
-        session_id = str(uuid.uuid4())
-        # Use first 30 chars of query as title
-        title = request.query[:30] + "..." if len(request.query) > 30 else request.query
-        await create_chat_session(session_id, user_id, title)
-    
-    # Get history
-    history = await get_chat_history(session_id)
-    formatted_history = "\n".join([f"{msg['role']}: {msg['content']}" for msg in history])
-    
-    chain = get_rag_chain()
-    response = chain.invoke({
-        "question": request.query,
-        "chat_history": formatted_history
-    })
-    
-    # Save interaction
-    await create_chat_message(user_id, "user", request.query, session_id)
-    await create_chat_message(user_id, "assistant", response["answer"], session_id)
-    
-    return {"answer": response["answer"], "session_id": session_id}
+# Note: Non-streaming /chat endpoint removed - frontend only uses /chat/stream
 
 @router.get("/chat/sessions")
 async def get_sessions(current_user: dict = Depends(require_user)):
@@ -114,20 +88,44 @@ async def chat_stream(request: ChatRequest, current_user: dict = Depends(require
     
     async def generate():
         try:
-            # Import classifier
-            from backend.chains.query_classifier import classify_query
+            # Get retriever and chain
+            from backend.chains.rag_chain import get_simple_chat_chain
+            from backend.chains.retriever_chroma import get_vectorstore
             
-            # Log the incoming query
-            logger.info(f"Received query: '{request.query[:50]}...' (User: {current_user['username']})")
+            chain, retriever = get_rag_chain_streaming()
+            vectorstore = get_vectorstore()
             
-            # Classify if query needs RAG
-            needs_rag = await asyncio.to_thread(classify_query, request.query)
+            # Retrieve documents with similarity scores
+            # Note: Use vectorstore directly, not retriever, for similarity_search_with_score
+            docs_with_scores = await asyncio.to_thread(
+                vectorstore.similarity_search_with_score,
+                request.query,
+                k=3
+            )
             
-            # Log classification result
+            # Determine if RAG is needed based on similarity score
+            # ChromaDB with OpenAI embeddings uses L2 distance: lower score = more similar
+            # Based on testing with text-embedding-3-small:
+            #   - Score < 1.0:  Very relevant documents
+            #   - Score 1.0-1.5: Possibly relevant documents  
+            #   - Score > 1.5: Not relevant (general conversation)
+            needs_rag = False
+            similarity_score = float('inf')
+            
+            if docs_with_scores:
+                # Get the best (lowest) distance score
+                similarity_score = docs_with_scores[0][1]
+                
+                # Threshold: 1.5 for L2 distance with OpenAI embeddings
+                # Documents within 1.5 distance are considered relevant
+                if similarity_score < 1.5:
+                    needs_rag = True
+            
+            # Log classification result with similarity score
             if needs_rag:
-                logger.info(f"USED RAG")
+                logger.info(f"USED RAG (similarity score: {similarity_score:.4f})")
             else:
-                logger.info(f"NOT USED RAG")
+                logger.info(f"NOT USED RAG (similarity score: {similarity_score:.4f})")
             
             # Send session_id first
             yield f"data: {json.dumps({'type': 'session_id', 'session_id': session_id})}\n\n"
@@ -135,17 +133,8 @@ async def chat_stream(request: ChatRequest, current_user: dict = Depends(require
             full_response = ""
             
             if needs_rag:
-                # Use RAG for document-based queries
-                from backend.chains.rag_chain import get_rag_chain_streaming
-                chain, retriever = get_rag_chain_streaming()
-                
-                logger.info(f"Retrieving documents from vector store...")
-                # Get context documents
-                docs = await asyncio.to_thread(
-                    retriever.invoke,
-                    request.query
-                )
-                logger.info(f"RETRIEVED {len(docs)} documents")
+                # Use RAG with already-retrieved documents (no second retrieval!)
+                docs = [doc for doc, score in docs_with_scores]
                 
                 # Stream the response with context
                 async for chunk in chain.astream({
@@ -158,12 +147,10 @@ async def chat_stream(request: ChatRequest, current_user: dict = Depends(require
                         yield f"data: {json.dumps({'type': 'token', 'content': chunk})}\n\n"
             else:
                 # Use simple chat for conversational queries (much faster!)
-                from backend.chains.rag_chain import get_simple_chat_chain
-                chain = get_simple_chat_chain()
+                simple_chain = get_simple_chat_chain()
                 
-                logger.info(f"Using simple chat (no document retrieval)")
                 # Stream the response without RAG overhead
-                async for chunk in chain.astream({
+                async for chunk in simple_chain.astream({
                     "question": request.query,
                     "chat_history": formatted_history
                 }):
@@ -173,9 +160,6 @@ async def chat_stream(request: ChatRequest, current_user: dict = Depends(require
             
             # Save assistant message
             await create_chat_message(user_id, "assistant", full_response, session_id)
-            
-            # Log completion
-            logger.info(f"Response completed ({len(full_response)} chars) - Mode: {'RAG' if needs_rag else 'Simple Chat'}")
             
             # Send done signal
             yield f"data: {json.dumps({'type': 'done'})}\n\n"

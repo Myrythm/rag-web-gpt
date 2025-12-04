@@ -11,3 +11,5 @@ chromadb
 pymupdf
 aiosqlite
 pydantic-settings
+langchain-community
+sqlalchemy
