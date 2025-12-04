@@ -1,7 +1,30 @@
+# Environment
 .env
+
+# Python
 venv/
-chroma/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Database
 rag_web.db
+.langchain.db
+
+# ChromaDB
+chroma/
+
+# Frontend
 frontend/node_modules/
-backend/__pycache__
-backend/chains/__pycache__
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
