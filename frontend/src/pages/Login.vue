@@ -2,9 +2,9 @@
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 p-4">
     <div class="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 p-8 rounded-2xl shadow-2xl w-full max-w-md">
       <div class="text-center mb-8">
-        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg shadow-blue-500/30">
-          R
-        </div>
+        <!-- <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4 shadow-lg shadow-blue-500/30">
+          
+        </div> -->
         <h1 class="text-3xl font-bold text-white mb-2">Welcome Back</h1>
         <p class="text-gray-400">Sign in to continue</p>
       </div>
@@ -34,9 +34,14 @@
         
         <button
           type="submit"
-          class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white p-3 rounded-xl transition-all font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
+          :disabled="isLoading"
+          class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 px-6 rounded-lg font-medium transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2"
         >
-          Sign In
+          <svg v-if="isLoading" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>{{ isLoading ? 'Signing in...' : 'Sign In' }}</span>
         </button>
       </form>
     </div>
@@ -50,19 +55,25 @@ import { useRouter } from "vue-router";
 
 const username = ref("");
 const password = ref("");
+const isLoading = ref(false);
 const userStore = useUserStore();
 const router = useRouter();
 
 const handleSubmit = async () => {
-  const success = await userStore.login(username.value, password.value);
-  if (success) {
-    if (userStore.user.role === "admin") {
-      router.push("/admin");
+  isLoading.value = true;
+  try {
+    const success = await userStore.login(username.value, password.value);
+    if (success) {
+      if (userStore.user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } else {
-      router.push("/");
+      alert("Login failed");
     }
-  } else {
-    alert("Login failed");
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
