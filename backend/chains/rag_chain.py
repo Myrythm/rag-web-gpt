@@ -4,18 +4,18 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from backend.chains.retriever_chroma import get_retriever
 from backend.utils.config import settings
+from operator import itemgetter
 
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
-from operator import itemgetter
+
 
 # Note: Non-streaming get_rag_chain() removed - only streaming version is used
 
 def get_rag_chain_streaming():
     """Get RAG chain configured for streaming responses"""
     retriever = get_retriever()
-    # Enable streaming with ChatOpenAI
     llm = ChatOpenAI(
         model="gpt-4.1-mini", 
         temperature=0, 
@@ -70,7 +70,7 @@ def get_simple_chat_chain():
     """Get a simple chat chain without RAG for direct conversation"""
     llm = ChatOpenAI(
         model="gpt-4.1-mini", 
-        temperature=0.7,  # Slightly higher temperature for natural conversation
+        temperature=0.7,  
         openai_api_key=settings.OPENAI_API_KEY,
         streaming=True
     )
